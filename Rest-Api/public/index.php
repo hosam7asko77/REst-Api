@@ -1,73 +1,77 @@
 <?php
-declare(strict_types=1);
-
-use App\Application\Handlers\HttpErrorHandler;
-use App\Application\Handlers\ShutdownHandler;
-use App\Application\ResponseEmitter\ResponseEmitter;
-use DI\ContainerBuilder;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
-use Slim\Factory\ServerRequestCreatorFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
+require_once "../include/DBOperation.php";
+$app = AppFactory::create();
 
-// Instantiate PHP-DI ContainerBuilder
-$containerBuilder = new ContainerBuilder();
+$app->setBasePath("/projects/My-Api/public");
+$app->post('/createUser', function (Request $request, Response $response, array $args) {
+  //if(!haveEmptyParameters(array('name','course','email','password','age'),$response)){
+      $request_data=$request->getParsedBody();
+      $name=$request_data['name'];
+      $course=$request_data['course'];
+      $email=$request_data['email'];
+      $password=$request_data['password'];
+      $age=$request_data['age'];
+          $db=new BbOperation;
+          $pass=password_hash($password,PASSWORD_DEFAULT);
+          $rs=$db->createUser($name,$course,$email,$pass,$age);
+          if($rs==200){
+            $message=array();
+            $message['error']=false;
+            $message['message']='User Created Successfuly';
+            $response->getBody()->write(json_encode($message));
+            return $response
+                          ->withHeader('Content_type','application/json')
+                          ->withStatus(201);
+          }
+          elseif($rs==401){
+            $message=array();
+            $message['error']=true;
+            $message['message']="User Exist";
+            $response->getBody()->write(json_encode($message));
+            return $response
+                          ->withHeader('Content_type','application/json')
+                          ->withStatus(422);
+          }
+          elseif($rs==404){
+            $message=array();
+            $message['error']=true;
+            $message['messae']='some eroor is occurred';
+            $response->getBody()->write(json_encode($message));
+            return $response
+                          ->withHeader('Content_type','application/json')
+                          ->withStatus(422);
+          }
+          return $response
+                        ->withHeader('Content_type','application/json')
+                        ->withStatus(422);
+    //}
 
-if (false) { // Should be set to true in production
-	$containerBuilder->enableCompilation(__DIR__ . '/../var/cache');
+
+    return $response;
+});
+ function haveEmptyParameters($required_params,$response){
+  $error=false;
+  $error_params='';
+  $required_params=$_REQUEST;
+  foreach ($required_params as $param) {
+    if(!isset($required_params[$param])||strlen($required_params[$param])<=0){
+    $error=true;
+    $error_params .=$param .',';
+  }
+}
+  if ($error) {
+    $error_detail=array();
+    $error_detail['error']=true;
+    $error_detail['message']='require param '.substr($error_params,0,-3).'are missing or empty';
+    $response->getBody()->write(json_encode($error_detail));
+  }
+
+  return $error;
 }
 
-// Set up settings
-$settings = require __DIR__ . '/../app/settings.php';
-$settings($containerBuilder);
-
-// Set up dependencies
-$dependencies = require __DIR__ . '/../app/dependencies.php';
-$dependencies($containerBuilder);
-
-// Set up repositories
-$repositories = require __DIR__ . '/../app/repositories.php';
-$repositories($containerBuilder);
-
-// Build PHP-DI Container instance
-$container = $containerBuilder->build();
-
-// Instantiate the app
-AppFactory::setContainer($container);
-$app = AppFactory::create();
-$callableResolver = $app->getCallableResolver();
-
-// Register middleware
-$middleware = require __DIR__ . '/../app/middleware.php';
-$middleware($app);
-
-// Register routes
-$routes = require __DIR__ . '/../app/routes.php';
-$routes($app);
-
-/** @var bool $displayErrorDetails */
-$displayErrorDetails = $container->get('settings')['displayErrorDetails'];
-
-// Create Request object from globals
-$serverRequestCreator = ServerRequestCreatorFactory::create();
-$request = $serverRequestCreator->createServerRequestFromGlobals();
-
-// Create Error Handler
-$responseFactory = $app->getResponseFactory();
-$errorHandler = new HttpErrorHandler($callableResolver, $responseFactory);
-
-// Create Shutdown Handler
-$shutdownHandler = new ShutdownHandler($request, $errorHandler, $displayErrorDetails);
-register_shutdown_function($shutdownHandler);
-
-// Add Routing Middleware
-$app->addRoutingMiddleware();
-
-// Add Error Middleware
-$errorMiddleware = $app->addErrorMiddleware($displayErrorDetails, false, false);
-$errorMiddleware->setDefaultErrorHandler($errorHandler);
-
-// Run App & Emit Response
-$response = $app->handle($request);
-$responseEmitter = new ResponseEmitter();
-$responseEmitter->emit($response);
+$app->run();
