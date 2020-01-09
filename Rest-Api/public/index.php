@@ -118,9 +118,6 @@ $app->post('/userLogin', function (Request $request, Response $response, array $
 
   return $error;
 }
-public function FunctionName($value='hosam')
-{
-  echo "hosam";
-}
+
 
 $app->run();
