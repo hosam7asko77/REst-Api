@@ -2,7 +2,7 @@
 /**
  *
  */
-class BbOperation
+class DbOperation
 {
   private $con;
   function __construct()
@@ -32,6 +32,65 @@ public function createUser($name,$course,$email,$password,$age){
     $sql->store_result();
     return $sql->num_rows  > 0;
   }
+  public function userLogin($email,$password){
+    if($this->isEmailExist($email)){
+      $hashed_password= $this->getUserPasswordByEmail($email);
+      if(password_verify($password,$hashed_password)){
+        return 201;
+
+      }else {
+
+        return 202;
+      }
+    }else {
+      return 203;
+    }
+
+  }
+  public function getUserPasswordByEmail($email)
+{
+$sql=$this->con->prepare("SELECT s_password FROM student WHERE s_email=? ");
+$sql->bind_param("s",$email);
+$sql->execute();
+$sql->bind_result($password);
+$sql->fetch();
+return $password;
+
+}
+public function getUserByEmail($email)
+{
+$sql=$this->con->prepare("SELECT s_id,s_name, s_course, s_email, s_password, s_age FROM student WHERE s_email=? ");
+$sql->bind_param("s",$email);
+$sql->execute();
+$sql->bind_result($id,$name,$course,$email,$password,$age);
+$sql->fetch();
+$user=array();
+$user['id']=$id;
+$user['name']=$name;
+$user['course']=$course;
+$user['email']=$email;
+$user['password']=$password;
+$user['age']=$age;
+return $user;
+}
+function getAll(){
+$sql=$this->con->prepare("SELECT s_id,s_name, s_course, s_email, s_password, s_age FROM student");
+$sql->execute();
+$sql->bind_result($id,$name,$course,$email,$password,$age);
+  $users=array();
+while ($sql->fetch()) {
+  $user=array();
+  $user['id']=$id;
+  $user['name']=$name;
+  $user['course']=$course;
+  $user['email']=$email;
+  $user['password']=$password;
+  $user['age']=$age;
+array_push($users,$user);
+}
+  return $users;
+}
+
 }
 
  ?>

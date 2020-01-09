@@ -7,16 +7,16 @@ require __DIR__ . '/../vendor/autoload.php';
 require_once "../include/DBOperation.php";
 $app = AppFactory::create();
 
-$app->setBasePath("/projects/My-Api/public");
-$app->post('/createUser', function (Request $request, Response $response, array $args) {
-  //if(!haveEmptyParameters(array('name','course','email','password','age'),$response)){
+$app->setBasePath("/Slim/Rest-Api/Rest-Api/public");
+  $app->post('/createUser', function (Request $request, Response $response, array $args) {
+  if(!haveEmptyParameters(array('name','course','email','password','age'),$response)){
       $request_data=$request->getParsedBody();
       $name=$request_data['name'];
       $course=$request_data['course'];
       $email=$request_data['email'];
       $password=$request_data['password'];
       $age=$request_data['age'];
-          $db=new BbOperation;
+          $db=new DbOperation;
           $pass=password_hash($password,PASSWORD_DEFAULT);
           $rs=$db->createUser($name,$course,$email,$pass,$age);
           if($rs==200){
@@ -49,17 +49,62 @@ $app->post('/createUser', function (Request $request, Response $response, array 
           return $response
                         ->withHeader('Content_type','application/json')
                         ->withStatus(422);
-    //}
+    }
+    return $response
+                  ->withHeader('Content_type','application/json')
+                  ->withStatus(422);
 
+});
+$app->post('/userLogin', function (Request $request, Response $response, array $args) {
+	if (!haveEmptyParameters(array('password','email'),$response)) {
+		$request_data=$request->getParsedBody();
+		$password=$request_data['password'];
+		$email=$request_data['email'];
+		//$pass=password_hash($password,PASSWORD_DEFAULT);
+		$db = new DbOperation;
+		$result=$db->userLogin($email,$password);
+		if($result == 201){
+		$user=$db->getUserByEmail($email);
+		$response_data=array();
+		$response_data['error']=false;
+		$response_data['message']='User Login Successfully';
+		$response_data['user']=$user;
+		$response->getBody()->write(json_encode($response_data));
+		return $response
+									->withHeader('Content-type','application/json')
+									->withStatus(200);
+	}elseif ($result == 202) {
 
-    return $response;
+		$message=array();
+		$message['error']=true;
+		$message['message']='User Not Exist'.$password.' '.$email;
+		$response->getBody()->write(json_encode($message));
+		return $response
+									->withHeader('Content-type','application/json')
+									->withStatus(200);
+		}elseif ($result == 203) {
+			$message=array();
+			$message['error']=true;
+			$message['message']='Invalid credential';
+			$response->getBody()->write(json_encode($message));
+			return $response
+										->withHeader('Content-type','application/json')
+										->withStatus(200);
+	}
+  return $response
+                ->withHeader('Content-type','application/json')
+                ->withStatus(200);
+	}
+  return $response
+                ->withHeader('Content-type','application/json')
+                ->withStatus(404);
 });
  function haveEmptyParameters($required_params,$response){
   $error=false;
   $error_params='';
-  $required_params=$_REQUEST;
+  $request_params=$_REQUEST;
   foreach ($required_params as $param) {
-    if(!isset($required_params[$param])||strlen($required_params[$param])<=0){
+    if(!isset($request_params[$param]) || strlen($request_params[$param])<=0){
     $error=true;
     $error_params .=$param .',';
   }
@@ -67,7 +112,7 @@ $app->post('/createUser', function (Request $request, Response $response, array 
   if ($error) {
     $error_detail=array();
     $error_detail['error']=true;
-    $error_detail['message']='require param '.substr($error_params,0,-3).'are missing or empty';
+    $error_detail['message']='require param :'.substr($error_params,0,-1).' are missing or empty';
     $response->getBody()->write(json_encode($error_detail));
   }
 
