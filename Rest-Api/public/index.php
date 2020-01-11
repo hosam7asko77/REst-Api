@@ -99,6 +99,18 @@ $app->post('/userLogin', function (Request $request, Response $response, array $
                 ->withHeader('Content-type','application/json')
                 ->withStatus(404);
 });
+
+$app->get('/getAll', function (Request $request, Response $response, array $args) {
+		$db = new DbOperation;
+		$users=$db->getAll();
+		$response_data=array();
+		$response_data['error']=false;
+		$response_data['users']=$users;
+		$response->getBody()->write(json_encode($response_data));
+		return $response
+									->withHeader('Content-type','application/json')
+									->withStatus(201);
+});
  function haveEmptyParameters($required_params,$response){
   $error=false;
   $error_params='';
