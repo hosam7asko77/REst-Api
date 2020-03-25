@@ -111,6 +111,46 @@ $app->get('/getAll', function (Request $request, Response $response, array $args
 									->withHeader('Content-type','application/json')
 									->withStatus(201);
 });
+$app->post('/addImage', function (Request $request, Response $response, array $args) {
+//	if (!haveEmptyParameters(array('image1','image2'),$response)) {
+		$request_data=$request->getParsedBody();
+		$image=$request_data['image1'];
+		$image2=$request_data['image2'];
+    date_default_timezone_set("Asia/Kolkata");
+    $curtimr=time();
+    $datetime=date("Y-m-d");
+    $name1 = date('YmdHis',time()).mt_rand().'.jpg';
+    $name2 = date('YmdHis',time()).mt_rand().'.jpg';
+    $path = "../upload/$name";
+    $path2 = "../upload/$name2";
+		$db = new DbOperation;
+		$result=$db->addImage($name1,$name2);
+		if($result == 200){
+    file_put_contents($path,base64_decode($image));
+    file_put_contents($path2,base64_decode($image2));
+		$response_data=array();
+		$response_data['error']=false;
+		$response_data['message']='image added Successfully';
+		$response->getBody()->write(json_encode($response_data));
+		return $response
+									->withHeader('Content-type','application/json')
+									->withStatus(200);
+	}elseif ($result == 404) {
+
+		$message=array();
+		$message['error']=true;
+		$message['message']='eroor accoring';
+		$response->getBody()->write(json_encode($message));
+		return $response
+									->withHeader('Content-type','application/json')
+									->withStatus(404);
+		}
+	//}
+  //return $response
+    //            ->withHeader('Content-type','application/json')
+      //          ->withStatus(404);
+});
+
  function haveEmptyParameters($required_params,$response){
   $error=false;
   $error_params='';

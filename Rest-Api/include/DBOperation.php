@@ -90,6 +90,17 @@ array_push($users,$user);
 }
   return $users;
 }
+public function addImage($name1,$name2)
+{
+    $sql=$this->con->prepare("INSERT INTO image(profile, background)VALUES(?,?)");
+    $sql->bind_param("ss",$name1,$name2);
+    if($sql->execute()){
+      return 200;
+    }else {
+      return 404;
+    }
+
+}
 
 }
 
