@@ -150,6 +150,39 @@ $app->post('/addImage', function (Request $request, Response $response, array $a
     //            ->withHeader('Content-type','application/json')
       //          ->withStatus(404);
 });
+$app->get('/verifyEmail', function (Request $request, Response $response, array $args) {
+  $app = AppFactory::create();
+    $verifyEmail =$request->getQueryParams()['token'];
+    $db = new DbOperation;
+    $result=$db->updateVerifyStatus($verifyEmail);
+    if ($result==200) {
+      $response_data=array();
+      //$response_data['error']=false;
+      $response_data['message']="SUCCESS";
+      $response->getBody()->write(json_encode($response_data));
+      return $response
+                    ->withHeader('Content-type','application/json')
+                    ->withStatus(200);
+    }elseif ($result==404)
+     {
+      $response_data=array();
+      //$response_data['error']=true;
+      $response_data['message']="ERROR";
+      $response->getBody()->write(json_encode($response_data));
+      return $response
+                    ->withHeader('Content-type','application/json')
+                    ->withStatus(404);
+    }else {
+      $response_data=array();
+      //$response_data['error']=true;
+      $response_data['message']="ERROR ".$verifyEmail;
+      $response->getBody()->write(json_encode($response_data));
+      return $response
+                    ->withHeader('Content-type','application/json')
+                    ->withStatus(500);
+    }
+
+});
 
  function haveEmptyParameters($required_params,$response){
   $error=false;
