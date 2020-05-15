@@ -183,7 +183,40 @@ $app->get('/verifyEmail', function (Request $request, Response $response, array 
     }
 
 });
+$app->post('/addAddress', function (Request $request, Response $response, array $args) {
+	if (!haveEmptyParameters(array('fullAddress','country','state','city','lng','lat'),$response)) {
+		$request_data=$request->getParsedBody();
+    $fullAddress=$request_data['fullAddress'];
+    $country=$request_data['country'];
+    $state=$request_data['state'];
+    $city=$request_data['city'];
+		$lng=$request_data['lng'];
+		$lat=$request_data['lat'];
+		$db = new DbOperation;
+		$result=$db->addAddress($fullAddress,$country,$state,$city,$lng,$lat);
+		if($result == 200){
+		$response_data=array();
+		$response_data['error']=false;
+		$response_data['message']='Address added Successfully';
+		$response->getBody()->write(json_encode($response_data));
+		return $response
+									->withHeader('Content-type','application/json')
+									->withStatus(200);
+	}elseif ($result == 401) {
 
+		$message=array();
+		$message['error']=true;
+		$message['message']='Error in insert the address'.$lat.' '.$lng;
+		$response->getBody()->write(json_encode($message));
+		return $response
+									->withHeader('Content-type','application/json')
+									->withStatus(401);
+		}
+	}
+  return $response
+                ->withHeader('Content-type','application/json')
+                ->withStatus(404);
+});
  function haveEmptyParameters($required_params,$response){
   $error=false;
   $error_params='';

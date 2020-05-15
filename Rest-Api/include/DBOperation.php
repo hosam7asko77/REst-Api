@@ -111,21 +111,21 @@ public function addImage($name1,$name2)
     }
 
 }
-public function getVerifyEmail($verifyEmail)
+public function getVerifyEmail($verifyEmailtoken)
 {
   $sql=$this->con->prepare("SELECT * FROM student WHERE verify_email=?");
-  $sql->bind_param("s",$verifyEmail);
+  $sql->bind_param("s",$verifyEmailtoken);
   $sql->execute();
   $sql->store_result();
   return $sql->num_rows  > 0;
 }
-public function updateVerifyStatus($verifyEmail)
+public function updateVerifyStatus($verifyEmailToken)
 {
-  if ($this->getVerifyEmail($verifyEmail)) {
+  if ($this->getVerifyEmail($verifyEmailtoken)) {
 $sql=$this->con->prepare("UPDATE student SET verify_email=?,verify_status=? WHERE verify_email = ?");
 $status=true;
 $updateValue=null;
-$sql->bind_param("sss",$updateValue,$status,$verifyEmail);
+$sql->bind_param("sss",$updateValue,$status,$verifyEmailtoken);
 if($sql->execute()){
   return 200;
 }else {
@@ -140,6 +140,22 @@ public function generateString($number)
 $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 $gen=substr(str_shuffle($permitted_chars), 0, $number);
 return $gen;
+}
+public function addAddress($fullAddress,$country,$state,$city,$lng,$lat)
+{
+
+  $sql=$this->con->prepare("INSERT INTO address(full_address,
+      country,
+       state,
+        city,
+        lng,
+         lat)VALUES(?,?,?,?,?,?)");
+  $sql->bind_param("ssssss",$fullAddress,$country,$state,$city,$lng,$lat);
+  if($sql->execute()){
+    return 200;
+  }else {
+    return 401;
+  }
 }
 
 }
