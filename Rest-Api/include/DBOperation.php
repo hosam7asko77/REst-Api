@@ -100,10 +100,10 @@ array_push($users,$user);
 }
   return $users;
 }
-public function addImage($name1,$name2)
+public function addImage($name1,$name2,$user)
 {
-    $sql=$this->con->prepare("INSERT INTO image(profile, background)VALUES(?,?)");
-    $sql->bind_param("ss",$name1,$name2);
+    $sql=$this->con->prepare("INSERT INTO image(profile, background,u_id)VALUES(?,?,?)");
+    $sql->bind_param("sss",$name1,$name2,$user);
     if($sql->execute()){
       return 200;
     }else {

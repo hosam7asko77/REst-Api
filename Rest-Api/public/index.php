@@ -116,15 +116,16 @@ $app->post('/addImage', function (Request $request, Response $response, array $a
 		$request_data=$request->getParsedBody();
 		$image=$request_data['image1'];
 		$image2=$request_data['image2'];
+    $user=$request_data['user_id'];
     date_default_timezone_set("Asia/Kolkata");
     $curtimr=time();
     $datetime=date("Y-m-d");
     $name1 = date('YmdHis',time()).mt_rand().'.jpg';
     $name2 = date('YmdHis',time()).mt_rand().'.jpg';
-    $path = "../upload/$name";
+    $path = "../upload/$name1";
     $path2 = "../upload/$name2";
 		$db = new DbOperation;
-		$result=$db->addImage($name1,$name2);
+		$result=$db->addImage($name1,$name2,$user);
 		if($result == 200){
     file_put_contents($path,base64_decode($image));
     file_put_contents($path2,base64_decode($image2));
